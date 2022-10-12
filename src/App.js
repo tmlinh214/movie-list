@@ -2,26 +2,44 @@ import React from 'react'
 import MovieList from './components/MovieList'
 import MovieCard from './components/MovieCard'
 import Searchbar from './components/Searchbar'
-import { handleAddButton,handleCancel } from './utils'
+import { movieData, genreArr } from './data'
+import {handleCancel } from './utils'
 import {nanoid} from 'nanoid'
 import './styles.css'
 
 export default function App() {
-  const [list,setList]=React.useState([{id:1,title:'Sinister',genre:'Horror',description:'abc',imageUrl:'./images/sinister.png'},{id:2,title:'Ted',genre:'Comedy',description:'abc',imageUrl:'./images/ted.png'}])
+  const [list,setList]=React.useState(movieData)
   const [item,setItem]=React.useState({id:0,title:'',    imageUrl:'',    description:'',    genre:''})
+  const [search,setSearch] = React.useState({title:'',genre:'All genres'})
+  const [movieGenre,setMovieGenre] = React.useState(genreArr.map(item=>{
+    return <option value={item} id={item} key={item}>{item}</option>
+  }))
   
+  function handleAddButton(){
+    setItem({id:0,title:'',    imageUrl:'',    description:'',    genre:''})
+    document.getElementById('add-card').classList.remove('hidden')
+ }
 
-  function handleSearch(event){
+  function handleTitleSearch(event){
+    setSearch(prevSearch=>{
+      return {...prevSearch,title:event.target.value}
+    })
     let searchTitle = event.target.value.toLowerCase();
-    let allMovieTitles = list.map(item => item.title.toLowerCase())
-    for (let i=0; i<allMovieTitles.length;i++){
-        const currentTitle=allMovieTitles[i]
+    let allMovies= list.map(item => {
+      return {title:item.title.toLowerCase(),
+              genre:item.genre        
+      }
+    })
+    for (let i=0; i<allMovies.length;i++){
+      if(allMovies[i].genre===search.genre || search.genre==='All genres'){
+        const currentTitle=allMovies[i].title
         if(currentTitle.includes(searchTitle)){
             document.getElementById(currentTitle).style.display="block"
         }
         else{
             document.getElementById(currentTitle).style.display="none"
         }
+      }
     }
   }
 
@@ -54,8 +72,51 @@ function handleGenreChange(event){
       })
 }
 
+function handleGenreSearch(event){
+  setSearch(prevSearch => {
+    return {...prevSearch,genre:event.target.value}
+  })
+  let searchGenre=event.target.value
+  let allMovies= list.map(item => {
+    return {title:item.title.toLowerCase(),
+            genre:item.genre        
+    }
+  })
+  
+  for (let i=0; i<allMovies.length;i++){
+    if(allMovies[i].title.includes(search.title)){
+      const currentTitle=allMovies[i].title
+      if(searchGenre !== 'All genres'){
+        if(allMovies[i].genre===searchGenre){
+          document.getElementById(currentTitle).style.display="block"
+        }
+        else{
+          document.getElementById(currentTitle).style.display="none"
+        }
+      } else {
+        document.getElementById(currentTitle).style.display="block"
+      }
+      
+    }
+    
+  }
+}
+
+function handleImageUpload(event){
+  
+  const {name}=event.target
+  const url = URL.createObjectURL(event.target.files[0])
+  
+  setItem(prevState=>{
+    return {
+      ...prevState,
+      [name]:url
+    }
+  })
+    
+}
+
 function handleAddMovie(item){
-  console.log(item)
   item.id=nanoid()
   let movieExist=false;
   for(const movie of list){
@@ -70,11 +131,14 @@ function handleAddMovie(item){
 }
 
   return (
-    <div>
-      <Searchbar handleAddButton={handleAddButton} handleSearch={handleSearch}/>
-      <MovieList list={list} item={item} setList={setList} setItem={setItem} handleDescriptionChange={handleDescriptionChange} handleTitleChange={handleTitleChange} handleGenreChange={handleGenreChange}/>
+    <div className='container'>
+      <Searchbar handleAddButton={handleAddButton} handleTitleSearch={handleTitleSearch} handleGenreSearch={handleGenreSearch} movieGenre={movieGenre}/>
+      
+      <MovieList list={list} item={item} movieGenre={movieGenre} setList={setList} setItem={setItem} handleDescriptionChange={handleDescriptionChange} handleTitleChange={handleTitleChange} handleGenreChange={handleGenreChange} handleImageUpload={handleImageUpload}/>
+      
+      
       <div id='add-card' className='hidden'>
-        <MovieCard handleCancel={()=>handleCancel('add-card')} handleDelete={()=>handleCancel('add-card')} handleGenreChange={handleGenreChange} handleSave={()=>handleAddMovie(item)} handleDescriptionChange={handleDescriptionChange} handleTitleChange={handleTitleChange}/>
+        <MovieCard url={item.imageUrl} movieGenre={movieGenre} handleCancel={()=>handleCancel('add-card')} handleDelete={()=>handleCancel('add-card')} handleGenreChange={handleGenreChange} handleSave={()=>handleAddMovie(item)} handleDescriptionChange={handleDescriptionChange} handleTitleChange={handleTitleChange} handleImageUpload={handleImageUpload}/>
       </div>
       
     </div>

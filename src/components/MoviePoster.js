@@ -1,9 +1,12 @@
 import React from 'react'
-import MovieCard from './MovieCard'
+
 
 function MoviePoster(props) {
   return (
-    <img src={props.url} alt='' width='160' height='256' onClick={props.handlePosterClick}/>
+    <figure className='image is-2by3'>
+      <img src={props.url} alt='' onClick={props.handlePosterClick}/>
+    </figure>
+    
   )
 }
 
